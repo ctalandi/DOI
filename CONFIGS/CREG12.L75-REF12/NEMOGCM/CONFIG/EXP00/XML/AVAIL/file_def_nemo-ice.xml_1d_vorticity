@@ -1,0 +1,131 @@
+    <!-- 
+============================================================================================================
+=                                           output files definition                                        =
+=                                            Define your own files                                         =
+=                                         put the variables you want...                                    =
+============================================================================================================
+    -->
+    
+    <file_definition type="multiple_file" name="<OUTDIR>/@expname@_@freq@" sync_freq="1d" min_digits="4">
+    
+      <file_group id="2h" output_freq="2h"  output_level="10" enabled=".TRUE."/> <!-- 2h files -->
+      <file_group id="3h" output_freq="3h"  output_level="10" enabled=".TRUE."/> <!-- 3h files -->     
+      <file_group id="4h" output_freq="4h"  output_level="10" enabled=".TRUE."/> <!-- 4h files -->
+      <file_group id="6h" output_freq="6h"  output_level="10" enabled=".TRUE."/> <!-- 6h files -->
+
+      <file_group id="1d" output_freq="1d" output_level="10" enabled=".TRUE.">  <!-- 1d files -->  
+
+        <file id="file7" name_suffix="_ICE_scalar" split_freq="1y" description="scalar variables" >
+          <field field_ref="ibgvol_tot"    name="ibgvoltot"    long_name="global mean ice volume"        />
+          <field field_ref="sbgvol_tot"    name="sbgvoltot"    long_name="global mean snow volume"       />
+          <field field_ref="ibgarea_tot"   name="ibgarea"      long_name="global mean ice area"          />
+          <field field_ref="ibgheat_tot"   name="ibgheatco"    long_name="global mean ice heat content"  />
+          <field field_ref="ibgsalt_tot"   name="ibgsaltco"    long_name="global mean ice salt content"  />
+          <field field_ref="sbgheat_tot"   name="sbgheatco"    long_name="global mean snow heat content" />
+
+          <variable name="start_date"       type="int"><NDATE0>    </variable>
+          <variable name="output_frequency" type="string">1d       </variable>
+          <variable name="CONFIG"           type="string"><CONFIG> </variable>
+          <variable name="CASE"             type="string"><CASE>   </variable>
+        </file>
+
+ 
+	<!-- ########    ICEMOD-GRID    ########  -->
+	<file id="file6" name_suffix="_icemod" split_freq="1mo" description="ice variables"  >
+              <field field_ref="icevolu"          name="sivolu"     long_name="ice volume"            />
+              <field field_ref="iceconc"          name="siconc"     long_name="ice concentration"     />
+              <field field_ref="snwvolu"          name="snvolu"     long_name="snow volume"           />
+
+              <field field_ref="icetemp"          name="sitemp"     long_name="Mean ice temperature"  />
+              <field field_ref="icesalt"          name="sisali"     long_name="Mean ice salinity"     />
+              <field field_ref="iceage"           name="siages"     long_name="Mean ice age"          />
+
+              <field field_ref="uice"             name="sivelu"     long_name="Ice velocity along i-axis at I-point (ice presence average)" />             
+              <field field_ref="vice"             name="sivelv"     long_name="Ice velocity along j-axis at I-point (ice presence average)" />
+              <field field_ref="utau_ai"          name="utau_atmice"   long_name="Wind stress along i-axis over the ice at i-point for the rheology"      />
+              <field field_ref="vtau_ai"          name="vtau_atmice"   long_name="Wind stress along j-axis over the ice at i-point for the rheology"      />
+              <field field_ref="utau_oi"          name="utau_oi"    long_name="X-component of ocean stress on sea ice for the rheology"                   />
+              <field field_ref="vtau_oi"          name="vtau_oi"    long_name="Y-component of ocean stress on sea ice for the rheology"                   />
+              <field field_ref="utau_bi"          name="utau_bi"    long_name="X-component of ocean bottom stress on sea ice -landfast for the rheology"  />
+              <field field_ref="vtau_bi"          name="vtau_bi"    long_name="Y-component of ocean bottom stress on sea ice -landfast for the rheology"  />
+              <field field_ref="icevel"           name="sivelo"     long_name="ice speed"      />
+              <field field_ref="icestr"           name="sistre"     long_name="ice strength"   />
+              <field field_ref="icediv"           name="sidive"     long_name="ice divergence" />
+              <field field_ref="iceshe"           name="sishea"     long_name="ice shear"      />
+              <field field_ref="dssh_dx"          name="dssh_dx"    long_name="Sea-surface tilt term in force balance (x-component)"   />
+              <field field_ref="dssh_dy"          name="dssh_dy"    long_name="Sea-surface tilt term in force balance (y-component)"   />
+              <field field_ref="corstrx"          name="corstrx"    long_name="Coriolis force term in force balance (x-component)"     />
+              <field field_ref="corstry"          name="corstry"    long_name="Coriolis force term in force balance (y-component)"     />
+              <field field_ref="intstrx"          name="intstrx"    long_name="Internal stress term in force balance (x-component)"   />
+              <field field_ref="intstry"          name="intstry"    long_name="Internal stress term in force balance (y-component)"   />
+
+              <field field_ref="mdUicedt"         name="mdUicedt"   long_name="X-component of ice trend mdudt "                      />
+              <field field_ref="mdVicedt"         name="mdVicedt"   long_name="Y-component of ice trend mdvdt"                       />
+              <field field_ref="mdXicedt"         name="mdXicedt"   long_name="Ice vorticity trend mdXidt "                          />
+
+                  
+              <variable name="start_date"       type="int"><NDATE0>    </variable>
+              <variable name="output_frequency" type="string">1d       </variable>
+              <variable name="CONFIG"           type="string"><CONFIG> </variable>
+              <variable name="CASE"             type="string"><CASE>   </variable>
+        </file>
+
+	<!-- ########    ICEFLX-GRID    ########  -->
+	<file id="file9" name_suffix="_iceflx" split_freq="1mo" description="ice variables"  >
+              <!-- salt fluxes -->
+              <field field_ref="sfxice"          name="sfxice"     long_name="ice-ocean salt flux from Total ice growth/melt (neg = growth)"     />
+              <field field_ref="sfxbog"          name="sfxbog"     long_name="ice-ocean salt flux from ice bottom growth"                  />
+              <field field_ref="sfxbom"          name="sfxbom"     long_name="ice-ocean salt flux from ice bottom melt"                    />
+              <field field_ref="sfxsum"          name="sfxsum"     long_name="ice-ocean salt flux from ice surface melt"                   />
+              <field field_ref="sfxlam"          name="sfxlam"     long_name="ice-ocean salt flux from ice lateral melt"                   />
+              <field field_ref="sfxsni"          name="sfxsni"     long_name="ice-ocean salt flux from snow-ice formation"                 />
+              <field field_ref="sfxopw"          name="sfxopw"     long_name="ice-ocean salt flux from ice formation in open water"        />
+              <field field_ref="sfxdyn"          name="sfxdyn"     long_name="ice-ocean salt flux from ice dynamics (ridging)"             />
+              <field field_ref="sfxbri"          name="sfxbri"     long_name="ice-ocean salt flux from brines"                             />
+              <field field_ref="sfxres"          name="sfxres"     long_name="ice-ocean salt flux from undiagnosed processes"              />
+              <field field_ref="sfxsub"          name="sfxsub"     long_name="ice-ocean salt flux from ice sublimation"                    />
+
+              <!-- mass fluxes -->
+              <field field_ref="vfxice"             name="vfxice"         long_name="ice-ocean mass flux from ice melt/growth (neg = growth)"           />
+              <field field_ref="vfxbog"             name="vfxbog"         long_name="ice-ocean mass flux from ice bottom growth"                        />
+              <field field_ref="vfxbom"             name="vfxbom"         long_name="ice-ocean mass flux from ice bottom melt"                          />
+              <field field_ref="vfxsum"             name="vfxsum"         long_name="ice-ocean mass flux from ice surface melt"                         />
+              <field field_ref="vfxlam"             name="vfxlam"         long_name="ice-ocean mass flux from ice lateral melt"                         />
+              <field field_ref="vfxsni"             name="vfxsni"         long_name="ice-ocean mass flux from snow-ice formation"                       />
+              <field field_ref="vfxopw"             name="vfxopw"         long_name="ice-ocean mass flux from ice growth in open water"                 />
+              <field field_ref="vfxdyn"             name="vfxdyn"         long_name="ice-ocean mass flux from ice dynamics (ridging)"                   />
+              <field field_ref="vfxres"             name="vfxres"         long_name="ice-ocean mass flux from undiagnosed processes"                    />
+              <field field_ref="vfxpnd"             name="vfxpnd"         long_name="ice-ocean mass flux from ice melt ponds"                           />
+              <field field_ref="vfxsub"             name="vfxsub"         long_name="ice-atm.  mass flux from ice sublimation"                          />
+              <field field_ref="vfxsub_err"         name="vfxsub_err"     long_name="ice-ocean mass flux from unbalance in sublimation (incl. in qt_oce_ai)"     />
+              <field field_ref="vfxthin"            name="vfxthin"        long_name="ice-ocean mass flux from ice growth in open water + thin ice(20cm)"         />
+                                                                                                                                                            
+              <field field_ref="vfxsnw"             name="vfxsnw"         long_name="ice-ocean mass flux from snw melt/growth (neg = growth)"           />
+              <field field_ref="vfxsnw_sum"         name="vfxsnw_sum"     long_name="ice-ocean mass flux from snw surface melt"                         />
+              <field field_ref="vfxsnw_sni"         name="vfxsnw_sni"     long_name="ice-ocean mass flux from snow-ice formation"                       />
+              <field field_ref="vfxsnw_dyn"         name="vfxsnw_dyn"     long_name="ice-ocean mass flux from dynamics (ridging)"                       />
+              <field field_ref="vfxsnw_sub"         name="vfxsnw_sub"     long_name="ice-atm.  mass flux from snw sublimation"                          />
+              <field field_ref="vfxsnw_pre"         name="vfxsnw_pre"     long_name="snw precipitation on ice"                                          />
+
+              <!-- surface heat fluxes -->
+              <field field_ref="qt_oce_ai"         name="qt_oce_ai"     long_name="total heat flux at the ocean surface: interface oce-(ice+atm)"       />
+                  
+              <variable name="start_date"       type="int"><NDATE0>    </variable>
+              <variable name="output_frequency" type="string">1d       </variable>
+              <variable name="CONFIG"           type="string"><CONFIG> </variable>
+              <variable name="CASE"             type="string"><CASE>   </variable>
+
+        </file>
+      </file_group>
+
+      <file_group id="2m" output_freq="2mo" output_level="10" enabled=".TRUE."/> <!-- real 2m files -->
+      <file_group id="3m" output_freq="3mo" output_level="10" enabled=".TRUE."/> <!-- real 3m files -->
+      <file_group id="4m" output_freq="4mo" output_level="10" enabled=".TRUE."/> <!-- real 4m files -->
+      <file_group id="6m" output_freq="6mo" output_level="10" enabled=".TRUE."/> <!-- real 6m files -->
+
+      <file_group id="1y"  output_freq="1y" output_level="10" enabled=".TRUE."/> <!-- real yearly files -->
+      <file_group id="2y"  output_freq="2y" output_level="10" enabled=".TRUE."/> <!-- real 2y files -->
+      <file_group id="5y"  output_freq="5y" output_level="10" enabled=".TRUE."/> <!-- real 5y files -->
+      <file_group id="10y" output_freq="10y" output_level="10" enabled=".TRUE."/> <!-- real 10y files -->
+
+   </file_definition>

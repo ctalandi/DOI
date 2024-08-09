@@ -1,0 +1,131 @@
+    <!-- 
+============================================================================================================
+=                                           output files definition                                        =
+=                                            Define your own files                                         =
+=                                         put the variables you want...                                    =
+============================================================================================================
+    -->
+    
+    <file_definition type="multiple_file" name="<OUTDIR>/@expname@_@freq@" sync_freq="1d" min_digits="4">
+    
+      <file_group id="2h" output_freq="2h"  output_level="10" enabled=".TRUE."/> <!-- 2h files -->
+      <file_group id="3h" output_freq="3h"  output_level="10" enabled=".TRUE."/> <!-- 3h files -->     
+      <file_group id="4h" output_freq="4h"  output_level="10" enabled=".TRUE."/> <!-- 4h files -->
+      <file_group id="6h" output_freq="6h"  output_level="10" enabled=".TRUE."/> <!-- 6h files -->
+
+      <file_group id="3h" output_freq="3h" output_level="10" enabled=".TRUE."> <!-- real monthly files -->
+
+        <!-- ########    INTEGRATED-VARIABLES    ########  -->
+        <file id="file8" name_suffix="_OCE_scalar" split_freq="1y" description="scalar variables" >
+          <field field_ref="sshtot"        name="sshtot"       long_name="global mean ssh"               />
+
+          <variable name="start_date"       type="int"><NDATE0>    </variable>
+          <variable name="output_frequency" type="string">3h       </variable>
+          <variable name="CONFIG"           type="string"><CONFIG> </variable>
+          <variable name="CASE"             type="string"><CASE>   </variable>
+	  <variable name="EOS"              type="string"> TEOS10  </variable>
+        </file>
+      </file_group>
+
+      <file_group id="3h" output_freq="3h" output_level="10" enabled=".TRUE.">  <!-- 3h files -->  
+ 
+	<!-- ########    T-GRID    ########  -->
+	<file id="file1" name_suffix="_gridT" split_freq="1mo" description="ocean T grid variables" >
+	      <field field_ref="e3t"          name="e3t"            long_name="T-cell thickness" />	
+	      <field field_ref="toce"         name="votemper"       long_name="Conservative temperature" >  @toce_e3t / @e3t  </field>
+	      <field field_ref="soce"         name="vosaline"       long_name="Absolute Salinity"        >  @soce_e3t / @e3t  </field>
+              <field field_ref="ssh"          name="ssh"            long_name="sea_surface_height_above_geoid"                    />
+              <field field_ref="mldr1_1"      name="mldr1_1"        long_name="Mixed Layer Depth (dsigma = 0.01 wrt 1m)"          />
+              <field field_ref="rhop"         name="rhop_sig0"      long_name="potential density (sigma0)"                        />
+              <field field_ref="botpres"      name="botpres"        long_name="Pressure at sea floor"                             />
+              <field field_ref="ahmt_3d"      name="ahmt_3d"        long_name="3D      t-eddy viscosity coefficient"              />
+       	
+              <variable name="start_date"       type="int"><NDATE0>    </variable>
+              <variable name="output_frequency" type="string">3h       </variable>
+              <variable name="CONFIG"           type="string"><CONFIG> </variable>
+              <variable name="CASE"             type="string"><CASE>   </variable>
+	      <variable name="EOS"              type="string"> TEOS10  </variable>
+       	</file>
+
+	<!-- ########    U-GRID    ########  -->
+	<file id="file2" name_suffix="_gridU" split_freq="1mo" description="ocean U grid variables" >
+	      <field field_ref="e3u"          name="e3u"            long_name="U-cell thickness" />	
+              <field field_ref="uoce"         name="vozocrtx"       long_name="sea_water_x_velocity" > @uoce_e3u / @e3u  </field>
+              <field field_ref="utau"         name="sozotaux"       long_name="surface_downward_x_stress" />
+              <field field_ref="utau_atmoce"  name="utau_atmoce"    long_name="open_ocean_downward_x_stress" />
+              <field field_ref="utau_iceoce"  name="utau_iceoce"    long_name="ice_ocean_downward_x_stress" />
+              <field field_ref="uwspd10"      name="uwspd10"        long_name="U wind speed at 10m" />
+              <field field_ref="ahtu_3d"      name="ahtu_3d"        long_name="3D      u-eddy diffusivity coefficient" />
+          
+              <variable name="start_date"       type="int"><NDATE0>    </variable>
+              <variable name="output_frequency" type="string">3h       </variable>
+              <variable name="CONFIG"           type="string"><CONFIG> </variable>
+              <variable name="CASE"             type="string"><CASE>   </variable>
+	      <variable name="EOS"              type="string"> TEOS10  </variable>
+        </file>
+	
+	<!-- ########    V-GRID    ########  -->
+	<file id="file3" name_suffix="_gridV" split_freq="1mo" description="ocean V grid variables" >
+	      <field field_ref="e3v"          name="e3v"            long_name="V-cell thickness" />	
+              <field field_ref="voce"         name="vomecrty"       long_name="sea_water_y_velocity" >  @voce_e3v / @e3v  </field>
+              <field field_ref="vtau"         name="sometauy"       long_name="surface_downward_y_stress" /> 
+              <field field_ref="vtau_atmoce"  name="vtau_atmoce"    long_name="open_ocean_downward_y_stress" /> 
+              <field field_ref="vtau_iceoce"  name="vtau_iceoce"    long_name="ice_ocean_downward_y_stress" /> 
+              <field field_ref="vwspd10"      name="vwspd10"        long_name="V wind speed at 10m" />
+              <field field_ref="ahtv_3d"      name="ahtv_3d"        long_name="3D      v-eddy diffusivity coefficient" />
+                  
+              <variable name="start_date"       type="int"><NDATE0>    </variable>
+              <variable name="output_frequency" type="string">3h       </variable>
+              <variable name="CONFIG"           type="string"><CONFIG> </variable>
+              <variable name="CASE"             type="string"><CASE>   </variable>
+	      <variable name="EOS"              type="string"> TEOS10  </variable>
+        </file>
+	
+	<!-- ########    W-GRID    ########  -->
+	<file id="file4" name_suffix="_gridW" split_freq="1mo" description="ocean W grid variables" >
+              <field field_ref="woce"         name="vovecrtz"       long_name="sea_water_z_velocity"            />
+              <field field_ref="avt"          name="votkeavt"       long_name="ocean_vertical_heat_diffusivity" />
+                  
+              <variable name="start_date"       type="int"><NDATE0>    </variable>
+              <variable name="output_frequency" type="string">3h       </variable>
+              <variable name="CONFIG"           type="string"><CONFIG> </variable>
+              <variable name="CASE"             type="string"><CASE>   </variable>
+	      <variable name="EOS"              type="string"> TEOS10  </variable>
+        </file>
+
+	<!-- ########    FLXT-GRID    ########  -->
+      <file id="file5" name_suffix="_flxT" split_freq="1mo" description="surface fluxes variables" > <!-- time step automaticaly defined based on nn_fsbc -->
+            <field field_ref="empmr"        name="empmr"      long_name="water_flux_into_sea_water"                     />
+	    <field field_ref="fmmflx"       name="fmmflx"     long_name="Water flux due to ice/snow/ponds freezing/melting"        />
+            <field field_ref="snowpre"      name="snowpre"    long_name="Snow precipitation"                            />
+            <field field_ref="runoffs"      name="runoffs"    long_name="River Runoffs"                                 />
+            <field field_ref="precip"       name="precip"     long_name="Total precipitation"                           />
+
+	    <field field_ref="qt"           name="qt"         long_name="Net Downward Heat Flux"                        />
+            <field field_ref="qns"          name="qns"        long_name="surface_net_downward_non_solar_flux" level="1" />
+            <field field_ref="qsr"          name="qsr"        long_name="surface_net_downward_shortwave_flux" level="1" />
+            <field field_ref="erp"          name="wfcorr"     long_name="water_flux_correction"               level="1" />
+            <field field_ref="taum"         name="taum"       long_name="wind stress module"                            />
+            <field field_ref="wspd"         name="windsp"     long_name="wind speed module"                             />
+
+
+            <variable name="start_date"       type="int"><NDATE0>    </variable>
+            <variable name="output_frequency" type="string">3h       </variable>
+            <variable name="CONFIG"           type="string"><CONFIG> </variable>
+            <variable name="CASE"             type="string"><CASE>   </variable>
+	    <variable name="EOS"              type="string"> TEOS10  </variable>
+        </file>
+
+      </file_group>
+
+      <file_group id="2m" output_freq="2mo" output_level="10" enabled=".TRUE."/> <!-- real 2m files -->
+      <file_group id="3m" output_freq="3mo" output_level="10" enabled=".TRUE."/> <!-- real 3m files -->
+      <file_group id="4m" output_freq="4mo" output_level="10" enabled=".TRUE."/> <!-- real 4m files -->
+      <file_group id="6m" output_freq="6mo" output_level="10" enabled=".TRUE."/> <!-- real 6m files -->
+
+      <file_group id="1y"  output_freq="1y" output_level="10" enabled=".TRUE."/> <!-- real yearly files -->
+      <file_group id="2y"  output_freq="2y" output_level="10" enabled=".TRUE."/> <!-- real 2y files -->
+      <file_group id="5y"  output_freq="5y" output_level="10" enabled=".TRUE."/> <!-- real 5y files -->
+      <file_group id="10y" output_freq="10y" output_level="10" enabled=".TRUE."/> <!-- real 10y files -->
+
+   </file_definition>
