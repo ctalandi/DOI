@@ -1,0 +1,118 @@
+#!/bin/bash
+######################
+## IRENE   TGCC/CEA ##
+######################
+#MSUB -r CREG12.L75-REF12
+#MSUB -o ./JOBS/CREG12.L75-REF12.o%I
+#MSUB -e ./JOBS/CREG12.L75-REF12.e%I
+#MSUB -eo
+#MSUB -n <NTASKS>
+#MSUB -x
+###### This one fit for 4 months #MSUB -T 21600
+######MSUB -T 3600
+#MSUB -T 46800
+#MSUB -A gen15098
+#MSUB -q rome
+#MSUB -m store,work,scratch
+#MSUB -E "--no-requeue"
+#MSUB -@ ctalandi@ifremer.fr:begin,end
+#######MSUB -E '--exclude=irene5231,irene5289,irene4844,irene4481' 
+
+
+##cd ${BRIDGE_MSUB_PWD}
+cd ${CCCWORKDIR}/RUNS/RUN_CREG12.L75/CREG12.L75-REF12/CTL
+
+set -x
+ulimit -s 
+ulimit -s unlimited
+
+#source ${CCCHOME}/.bashrc # To set basic env. variables properly such as PDIR, SDIR, CDIR etc ... for DCM 
+source ${CCCWORKDIR}/CONFIGS/CONFIG_CREG12.L75/CREG12.L75-REF12/2load_B4_Compiling.bash
+#module load memonit/2.0.0
+module list
+
+. ./includefile.sh
+
+PDIR=${CCCWORKDIR}/RUNS
+
+CTL_DIR=$PDIR/RUN_${CONFIG}/${CONFIG_CASE}/CTL
+
+# Following numbers must be consistant with the header of this job
+export NB_NPROC=<JPNIJ>      # number of cores used for NEMO
+export NB_NPROC_IOS=<NXIOS>  # number of cores used for xios (number of xios_server.exe)
+export NB_NCORE_DP=0        # activate depopulated core computation for XIOS. If not 0, RUN_DP is
+                            # the number of cores used by XIOS on each exclusive node.
+# Rebuild process 
+export MERGE=0         # 1 = on the fly rebuild, 0 = dedicated job
+export MERGE_QUEUE=xlarge    # partition for the rebuilding step
+export NB_NPROC_MER=16 # number of cores used for rebuild on the fly  (1/node is a good choice)
+export NB_NNODE_MER=1  # number of nodes used for rebuild in dedicated job (MERGE=0). One instance of rebuild per node will be used.
+export WALL_CLK_MER=05:00:00   # wall clock time for batch rebuild
+export ACCOUNT=gen7420 # account to be used
+
+date
+#
+
+. $RUNTOOLS/lib/function_4_all.sh
+. $RUNTOOLS/lib/function_4.sh
+#  you can eventually include function redefinitions here (for testing purpose, for instance).
+# ---
+
+# FOR THE OPENMPI lib
+export HCOLL_ENABLE_MCAST_ALL=0
+
+# WITH XIOS SERVER ON DEDICATED NODES
+#runcode_mpmd() {
+##         mpirun -bynode  -np $3 $4 : -np $1 $2
+#         rm -f ./zapp.conf
+#         echo $1"-<NDEPE>" bash -c \"$2\"  >> zapp.conf
+#         echo $3"-<DEPE>"  bash -c \"$4\" >> zapp.conf
+#         #echo $1"-<NDEPE>" bash -c \"memonit_collect $2\"  >> zapp.conf
+#         #echo $3"-<DEPE>"  bash -c \"memonit_collect $4\" >> zapp.conf
+#         ccc_mprun -f zapp.conf
+#                  }
+
+# Is the following still usefull ??
+echo "striping_factor 64" > ./hints
+export ROMIO_HINTS=./hints
+
+# WITH XIOS SERVER SPREAD ONNEMO NODES
+# After Yann Meurdesoif 2021 January 15th
+##	runcode_mpmd() {
+##	         rm -f ./zapp.conf
+##	         n=$(( $1 + $3 ))
+##	         ratio=$(( $1 / $3 ))
+##	         nemo=$(( 1 ))
+##	         xios=$(( 1 ))
+##	         echo 1"-1" bash -c \"$2\"  >> zapp.conf
+##	         for(( c=1; c<$n; c++ ))
+##	         do
+##	           if (( $nemo/$xios < $ratio && $nemo<=$1 ))
+##	           then
+##	             echo 1"-1" bash -c \"$2\"  >> zapp.conf
+##	             (( nemo++ )) 
+##	           else
+##	             echo 1"-1"  bash -c \"$4\" >> zapp.conf
+##	             (( xios++ ))
+##	           fi
+##	         done
+##	         echo $(( $1-$nemo )) $(( $3 - ($xios -1) ))
+##	         ccc_mprun -f zapp.conf
+##	                  }
+
+runcode_mpmd() {
+
+	rm -f short_zapp.conf
+	# CAUTION: The following spread suit to 23 nodes with 1 XIOS / node 
+	for iter in `seq 1 <NNODES> `; do 
+	
+	        echo "127-1 bash -c \"./nemo4.exe\" " >> short_zapp.conf 
+	        echo "1-1 bash -c \"./xios_server.exe\" " >> short_zapp.conf 
+
+	done 
+        ccc_mprun -f short_zapp.conf
+                  }
+
+module list
+
+. $RUNTOOLS/lib/nemo4.sh
