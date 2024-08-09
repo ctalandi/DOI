@@ -1,0 +1,287 @@
+#!/bin/bash
+
+# functions
+##  give usage of the script
+usage() {
+   echo "USAGE   : "
+   echo "       dcmtk_inforun.sh [-h] "
+   echo
+   echo "PURPOSE : "
+   echo "       Give informations about the run corresponding to this CTL or CDF directory"
+   echo
+   echo "OPTIONS :"
+   echo "       -h : print this short help message !"
+   echo
+   exit 0
+        }
+
+## determine CONFCASE from the actual directory (CTL or CDF)
+if [ $# != 0 ] ; then
+  if [ $1 = '-h' ] ; then
+   usage
+  fi
+fi
+get_confcase() {
+here=$(pwd)
+b_name=$( basename $here )
+
+case $b_name in
+(CTL) tmp=$(dirname  $here )
+      CONFCASE=$( basename $tmp )
+      CONFIG=${CONFCASE%-*}
+      CASE=${CONFCASE#*-} ;;
+
+(CDF ) tmp=$(dirname $here  )
+       tmp=$(dirname $tmp  )
+      CONFCASE=$( basename $tmp )
+      CONFIG=${CONFCASE%-*}
+      CASE=${CONFCASE#*-} ;;
+( * ) echo " cannot infer CONFCASE !"
+      echo " This is not a CTL dir nor a CTL/CDF dir "
+      exit 1
+esac
+echo "     CONFIG   : " $CONFIG
+echo "     CASE     : " $CASE
+echo " ==> CONFCASE : " $CONFCASE
+               }
+qma()   { 
+  squeue -u $USER  -o  "%.10i %.9P %.15j %.8u %.2t %.10M %.6D %.13l %.13L %20S %r"
+        }
+
+
+
+# Main
+get_confcase
+
+# define path of key directories according to CONFCASE
+CTLDIR=$PDIR/RUN_${CONFIG}/${CONFCASE}/CTL    # CTL
+SSDIR=$DDIR/${CONFIG}/${CONFCASE}-S           # -S on SCRATCH
+STDIR=$SDIR/${CONFIG}/${CONFCASE}-S           # -S on STORE
+ICBDIR=$SDIR/${CONFIG}/${CONFCASE}-S/ICBTRJ   # ICB on STORE
+MWDIR=$WORK/${CONFIG}/${CONFCASE}-MEAN        # -MEAN on WORK
+DIADIR=$WORK/${CONFIG}/${CONFCASE}-DIAGS/NC   # -DIAGS on WORK
+MONDIR=$WORK/${CONFIG}/${CONFCASE}-MONITOR    # monitoring time series
+
+DBFILE=${CONFCASE}.db                         # db file
+
+# ensure to be in CTL dir
+cd $CTLDIR
+#   Actual status of the job 
+echo " Actual status of the job : "
+echo " ======================== "
+echo 
+echo "      Last completed segment:  $( tail -2 $DBFILE | head -1 | awk '{print $1}' ) "
+            tmp=$(tail -2 $DBFILE  | head -1 | awk '{print $NF}' )
+            last_seg=$tmp
+echo "      Last date             : ${tmp:0:4}"-"${tmp:4:2}"-"${tmp:6:2}"
+            last_date=$tmp
+echo
+
+echo " status on mergexios :"
+lmerge=0
+jobids=( $( qma | grep zmergxios |awk '{print $1}' ) )
+if [ ${#jobids[@]} = 0 ] ; then
+   echo "     no mergexios running or waiting. "
+else
+        lmerge=1
+   for jj in ${jobids[@]} ; do
+    ST=$( qma | grep $jj | awk '{print $5}')
+    if [ $ST = PD ] ; then
+      echo mergexios $jj waiting 
+    fi
+    ls ${CTLDIR}/zmergxios.e${jj} > /dev/null 2>&1
+    if [ $? = 0 ] ; then
+        mergeseg=$( grep zXIOS ${CTLDIR}/zmergxios.e${jj} | awk -F. '{print $NF}' )
+        echo "      Job mergexios ( $jj ) is going on "
+        echo "      working for segment $mergeseg "
+       
+    fi
+   done
+fi
+echo
+   
+# files status according to file system
+echo " status on scratch :"
+lconcat=0
+if [ -d $SSDIR/1d ] ; then
+   cd $SSDIR/1d
+   tmp=$( ls -1d *-concat | tail -1 )
+   echo "      Last concatenate year : " ${tmp%-concat}
+   last_concat=${tmp%-concat}
+   jobids=( $( qma | grep CONCAT |awk '{print $1}' ) )
+   for jj in ${jobids[@]} ; do
+     ls ${CTLDIR}/*${jj} > /dev/null 2>&1
+     if [ $? = 0 ] ; then
+        echo "      Job concat ( $jj ) is going on "
+        lconcat=1
+     fi
+   done
+else
+   echo "      No files migrated to scratch yet"
+fi
+echo
+
+echo " status in WORK (-MEAN) :"
+   lmean=0
+   jobids=( $( qma | grep JOB_annual |awk '{print $1}' ) )
+   for jj in ${jobids[@]} ; do
+     ls ${CTLDIR}/*${jj} > /dev/null 2>&1
+     if [ $? = 0 ] ; then
+        echo "      Job  annual ( $jj ) is going on "
+        lmean=1
+     fi
+   done
+if [ -d $MWDIR/1y ] ; then
+
+  cd $MWDIR/1y
+  tmp=$( ls -1d * | tail -1 )
+  echo "      Last year in -MEAN    : " ${tmp}
+  last_mean=${tmp}
+  echo 
+else
+  echo "      No files in MEAN yet "
+fi
+echo 
+
+echo " status on STORE : "
+if [ -d $STDIR/1d ] ; then
+   cd $STDIR/1d
+   tmp=$( ls -1d *-concat | tail -1 )
+   echo "      Last stored year : " ${tmp%-concat}
+   last_stored=${tmp%-concat}
+else
+   echo "      No files migrated to STORE yet"
+fi
+cd $CTLDIR
+   lstore=0
+   jobids=( $( qma | grep JOB_store |awk '{print $1}' ) )
+   for jj in ${jobids[@]} ; do
+     ls ${CTLDIR}/*${jj} > /dev/null 2>&1
+     if [ $? = 0 ] ; then
+        echo "      Job store ( $jj ) is going on "
+        lstore=1
+     fi
+     ls ${CTLDIR}/CDF/*${jj} > /dev/null 2>&1
+     if [ $? = 0 ] ; then
+       echo "      Job store ( $jj ) is going on "
+       lstore=1
+     fi
+   done
+echo 
+
+# status of on-going monitoring
+echo " Monitoring :"
+   lmonitor=0
+   jobids=( $( qma | grep zmetamon |awk '{print $1}' ) )
+   for jj in ${jobids[@]} ; do
+     ls ${CTLDIR}/CDF/*${jj} > /dev/null 2>&1
+     if [ $? = 0 ] ; then
+        echo "      Job monitorin ( $jj ) is going on "
+        lmonitor=1
+     fi
+   done
+if [ -d $DIADIR ] ; then
+  cd $DIADIR
+  tmp=$(ls -1 *TSMEAN*nc | tail -1)
+  tmp=$( echo $tmp | sed -e "s/${CONFCASE}_y//" )
+  echo "      Last monitored year  : " ${tmp%%.*}
+  last_monit=${tmp%%.*}
+else
+  echo "      No monitoring done yet !"
+  last_monit=9999
+fi
+
+echo
+echo "SUGGESTION for Post Process :"
+echo "============================="
+
+echo "   (1) keeping files from XIOS etc.."
+cd $CTLDIR
+tmp=$( grep -e " ....1231"  $DBFILE  | tail -1 | awk '{print $NF}' )
+  echo "       Last year completed   : "${tmp:0:4}
+  last_completed=${tmp:0:4}
+  if [ $last_completed -gt $last_concat ] ; then
+     if [ $lmerge = 1 ] ; then
+       echo "   W A R N I N G :  mergexios running or waiting "
+     fi
+     echo "       "./keepclear.sh  $(( last_concat + 1 )) $last_completed  
+  else
+     echo "        no need for  keepclear.sh  now"
+  fi
+
+echo "   (2) copying files to -MEAN"
+  if [ $lmean = 1 ] ; then 
+     echo "       JOB annual is going on, wait for news"
+  else
+  if [ $last_concat -gt $last_mean ] ; then
+     echo "     cp2mean.sh  $(( last_mean + 1))  $last_concat)"
+     echo "     need to edit ./cpmean.sh to change date"
+  else
+     echo "     MEAN is already updated !"
+  fi
+  fi
+
+echo "   (3) Launch monitoring "
+if [ $lmonitor = 1 ] ; then
+   echo "      Job monitoring is runing .... wait for news...!"
+else
+if [ $(( last_monit + 1 )) -le $last_mean ] ; then
+   echo "        RUN_metamon  $(( last_monit + 1 )) $last_mean  "
+else
+   echo "         Monitoring not ready to launch ... $last_monit "
+fi
+last_diag=$( ls -1rt $DIADIR/*.nc | tail -1 )
+last_time=$( ls -1rt $MONDIR/*.nc | tail -1 )
+
+if [ $last_diag -nt $last_time ] ; then
+    echo "  Monitoring time series are not up to date:"
+    echo "  cd CDF ; ./make_ncdf_timeseries -a ; ./run_monitor_py_standalone  ; cd $CTLDIR"
+else
+    echo " Time series are updated "
+fi
+fi
+
+echo "   (4) Cleaning files in DDIR"
+cd $CTLDIR
+last_concat_seg=$( cat $DBFILE | grep "${last_concat}1231" | awk '{print $1}' )
+cd $DDIR
+seg1=$(   tmp=$(ls -1trd ${CONFCASE}-XIOS.* | head -1 ) ; echo ${tmp##*.} )
+if [ -f $ICBDIR/${CONFCASE}_y${last_concat}m12d31_trajectory_icebergs.${last_concat_seg}.nc ]  ; then
+  echo "       first remaining seg in DDIR : $seg1 "
+  echo "       last concatenated segment in DDIR : $last_concat_seg "
+  if [ $seg1 -lt $last_concat_seg ] ; then 
+     echo "          Safe cleaning from segments  $seg1 to $last_concat_seg "
+     echo "         dcmtk_clean_files  $seg1 $last_concat_seg "
+  else
+      echo "        Nothing to clean now!"
+  fi
+else
+   echo "       ICB files not yet ready ... wait "
+fi
+
+echo "   (5) sending files to STORE:"
+if [ $lconcat = 1 ] ; then
+    echo "    Concatenated files are under construction... wait before sending on STORE.."
+else
+  if [ $lstore = 1 ] ; then
+    echo "    JOB store is allready running ..."
+  else
+    if [ $last_stored -lt $last_concat ] ; then 
+       echo  "           sbatch store_concat.sh $( seq -s " " $(( $last_stored + 1 )) $last_concat ) "
+       echo  "             WARNING : check that there are no on-going CONCAT jobs !"
+       cd $SSDIR/1d/${last_concat}-concat
+       ls *tmp > /dev/null 2>&1
+       if [ $? = 0 ] ; then
+          echo "              There are on going CONCAT for $CONFCASE"
+       else
+          echo "              Likely that there are no on going CONCAT for $CONFCASE"
+        fi
+  
+    else
+      echo  "           STORE is already updated"
+    fi
+  fi
+echo
+fi
+
+
